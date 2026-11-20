@@ -2,11 +2,20 @@ import { useRef } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 
-type GuessHistoryProps = {
-  guesses: string[];
+import { evaluateGuess } from "@/utils/evaluate-guess";
+
+const STATUS_LABELS = {
+  correct: "correct position",
+  present: "in the word, wrong position",
+  absent: "not in the word or no remaining match",
 };
 
-export function GuessHistory({ guesses }: GuessHistoryProps) {
+type GuessHistoryProps = {
+  guesses: string[];
+  targetWord: string;
+};
+
+export function GuessHistory({ guesses, targetWord }: GuessHistoryProps) {
   const scrollRef = useRef<ScrollViewInstance>(null);
 
   return (
@@ -19,11 +28,26 @@ export function GuessHistory({ guesses }: GuessHistoryProps) {
       {guesses.length > 0 && (
         <Text style={styles.heading}>Your guesses</Text>
       )}
-      {guesses.map((guess, index) => (
-        <Text key={index} style={styles.guess}>
-          {index + 1}. {guess}
-        </Text>
-      ))}
+      {guesses.map((guess, index) => {
+        const statuses = evaluateGuess(guess, targetWord);
+        const description = statuses
+          .map((status, letterIndex) => `${guess[letterIndex]}: ${STATUS_LABELS[status]}`)
+          .join("; ");
+
+        return (
+          <Text
+            key={index}
+            style={styles.guess}
+            accessibilityLabel={`Guess ${index + 1}, ${guess}. ${description}`}
+          >
+            {index + 1}. {statuses.map((status, letterIndex) => (
+              <Text key={letterIndex} style={styles[status]}>
+                {guess[letterIndex]}
+              </Text>
+            ))}
+          </Text>
+        );
+      })}
     </ScrollView>
   );
 }
@@ -51,5 +75,14 @@ const styles = StyleSheet.create({
     fontFamily: "ShantellSans",
     fontSize: 18,
     letterSpacing: 2,
+  },
+  correct: {
+    color: "#7ad879",
+  },
+  present: {
+    color: "#f4d35e",
+  },
+  absent: {
+    color: "#d0d0d0",
   },
 });

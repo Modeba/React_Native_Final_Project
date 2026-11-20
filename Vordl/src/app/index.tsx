@@ -26,6 +26,16 @@ export default function Index() {
   }));
   const isGameOver = game.status !== "playing";
 
+  function handleRestart() {
+    setGame({
+      guess: "",
+      targetWord: getRandomWord(),
+      guesses: [],
+      feedback: "",
+      status: "playing",
+    });
+  }
+
   function handleKeyPress(key: string) {
     setGame((currentGame) => {
       if (currentGame.status !== "playing") {
@@ -71,6 +81,7 @@ export default function Index() {
 
       return {
         ...currentGame,
+        guess: "",
         guesses,
         status: isCorrect ? "won" : isLastGuess ? "lost" : "playing",
         feedback: isCorrect
@@ -103,7 +114,7 @@ export default function Index() {
           <Text style={styles.answer}>{game.targetWord}</Text>
         </View>
       ) : (
-        <GuessHistory guesses={game.guesses} />
+        <GuessHistory guesses={game.guesses} targetWord={game.targetWord ?? ""} />
       )}
       <View style={styles.bottomControls}>
         <Text accessibilityLiveRegion="polite" style={styles.feedback}>
@@ -111,16 +122,15 @@ export default function Index() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: isGameOver }}
-          disabled={isGameOver}
-          onPress={handleCheckGuess}
+          onPress={isGameOver ? handleRestart : handleCheckGuess}
           style={({ pressed }) => [
             styles.checkButton,
             pressed && styles.checkButtonPressed,
-            isGameOver && styles.checkButtonDisabled,
           ]}
         >
-          <Text style={styles.checkButtonText}>Check word</Text>
+          <Text style={styles.checkButtonText}>
+            {isGameOver ? "Play again" : "Check word"}
+          </Text>
         </Pressable>
         <Keyboard onKeyPress={handleKeyPress} disabled={isGameOver} />
       </View>
@@ -216,9 +226,6 @@ const styles = StyleSheet.create({
   },
   checkButtonPressed: {
     backgroundColor: "#bdbdbd",
-  },
-  checkButtonDisabled: {
-    opacity: 0.5,
   },
   checkButtonText: {
     color: "#242424",
