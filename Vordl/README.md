@@ -25,15 +25,9 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Fresh project
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+The project has been reset to a blank screen in **src/app/index.tsx**, with the root layout in **src/app/_layout.tsx**. The original starter code is preserved in **example/** and excluded from linting and TypeScript checks.
 
 ### Other setup steps
 
