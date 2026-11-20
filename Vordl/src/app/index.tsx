@@ -100,7 +100,6 @@ export default function Index() {
         <View style={styles.orbMint} />
       </View>
       <View style={styles.hero}>
-        <Text style={styles.eyebrow}>YOUR LITTLE WORD BREAK</Text>
         <Text style={styles.wordmark}>Vordl<Text style={styles.wordmarkDot}>.</Text></Text>
         <Text style={styles.welcome}>Welcome to Vordl, guess the word</Text>
       </View>
