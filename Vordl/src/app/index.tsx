@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { GuessHistory } from "@/components/guess-history";
 import { Keyboard } from "@/components/keyboard";
 import { getRandomWord, WORD_LENGTH } from "@/utils/words";
 
@@ -11,6 +12,7 @@ export default function Index() {
     targetWord: getRandomWord(),
   }));
   const [feedback, setFeedback] = useState("");
+  const [guesses, setGuesses] = useState<string[]>([]);
 
   function handleKeyPress(key: string) {
     setFeedback("");
@@ -38,10 +40,11 @@ export default function Index() {
       return;
     }
 
+    setGuesses((previousGuesses) => [...previousGuesses, game.guess]);
     setFeedback(
       game.guess === game.targetWord
         ? "Correct! You guessed the word!"
-        : "Not quite. Try another word!",
+        : "Incorrect!",
     );
   }
 
@@ -60,6 +63,7 @@ export default function Index() {
           </View>
         ))}
       </View>
+      <GuessHistory guesses={guesses} />
       <View style={styles.bottomControls}>
         <Text accessibilityLiveRegion="polite" style={styles.feedback}>
           {feedback}
