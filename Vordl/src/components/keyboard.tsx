@@ -8,9 +8,10 @@ const KEY_ROWS = [
 
 type KeyboardProps = {
   onKeyPress: (key: string) => void;
+  disabled?: boolean;
 };
 
-export function Keyboard({ onKeyPress }: KeyboardProps) {
+export function Keyboard({ onKeyPress, disabled = false }: KeyboardProps) {
   return (
     <View style={styles.keyboard}>
       {KEY_ROWS.map((row, index) => (
@@ -20,11 +21,14 @@ export function Keyboard({ onKeyPress }: KeyboardProps) {
               key={key}
               accessibilityRole="button"
               accessibilityLabel={key === "BACKSPACE" ? "Backspace" : key}
+              accessibilityState={{ disabled }}
+              disabled={disabled}
               onPress={() => onKeyPress(key)}
               style={({ pressed }) => [
                 styles.key,
                 key === "BACKSPACE" && styles.backspace,
                 pressed && styles.keyPressed,
+                disabled && styles.keyDisabled,
               ]}
             >
               <Text style={styles.keyText}>
@@ -64,6 +68,9 @@ const styles = StyleSheet.create({
   },
   keyPressed: {
     backgroundColor: "#a0a0a0",
+  },
+  keyDisabled: {
+    opacity: 0.5,
   },
   keyText: {
     color: "#ffffff",

@@ -6,55 +6,87 @@ import { GuessHistory } from "@/components/guess-history";
 import { Keyboard } from "@/components/keyboard";
 import { getRandomWord, WORD_LENGTH } from "@/utils/words";
 
+const MAX_GUESSES = 6;
+
+type GameState = {
+  guess: string;
+  targetWord: string | null;
+  guesses: string[];
+  feedback: string;
+  status: "playing" | "won" | "lost";
+};
+
 export default function Index() {
-  const [game, setGame] = useState(() => ({
+  const [game, setGame] = useState<GameState>(() => ({
     guess: "",
     targetWord: getRandomWord(),
+    guesses: [],
+    feedback: "",
+    status: "playing",
   }));
-  const [feedback, setFeedback] = useState("");
-  const [guesses, setGuesses] = useState<string[]>([]);
+  const isGameOver = game.status !== "playing";
 
   function handleKeyPress(key: string) {
-    setFeedback("");
     setGame((currentGame) => {
+      if (currentGame.status !== "playing") {
+        return currentGame;
+      }
+
       if (key === "BACKSPACE") {
-        return { ...currentGame, guess: currentGame.guess.slice(0, -1) };
+        return {
+          ...currentGame,
+          guess: currentGame.guess.slice(0, -1),
+          feedback: "",
+        };
       }
 
       if (currentGame.guess.length === WORD_LENGTH) {
         return currentGame;
       }
 
-      return { ...currentGame, guess: currentGame.guess + key };
+      return { ...currentGame, guess: currentGame.guess + key, feedback: "" };
     });
   }
 
   function handleCheckGuess() {
-    if (!game.targetWord) {
-      setFeedback("No words are available yet.");
-      return;
-    }
+    setGame((currentGame) => {
+      if (currentGame.status !== "playing") {
+        return currentGame;
+      }
 
-    if (game.guess.length !== WORD_LENGTH) {
-      setFeedback(`Enter all ${WORD_LENGTH} letters first.`);
-      return;
-    }
+      if (!currentGame.targetWord) {
+        return { ...currentGame, feedback: "No words are available yet." };
+      }
 
-    setGuesses((previousGuesses) => [...previousGuesses, game.guess]);
-    setFeedback(
-      game.guess === game.targetWord
-        ? "Correct! You guessed the word!"
-        : "Incorrect!",
-    );
+      if (currentGame.guess.length !== WORD_LENGTH) {
+        return {
+          ...currentGame,
+          feedback: `Enter all ${WORD_LENGTH} letters first.`,
+        };
+      }
+
+      const guesses = [...currentGame.guesses, currentGame.guess];
+      const isCorrect = currentGame.guess === currentGame.targetWord;
+      const isLastGuess = guesses.length >= MAX_GUESSES;
+
+      return {
+        ...currentGame,
+        guesses,
+        status: isCorrect ? "won" : isLastGuess ? "lost" : "playing",
+        feedback: isCorrect
+          ? "Correct! You guessed the word!"
+          : isLastGuess ? "" : "Incorrect!",
+      };
+    });
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.welcome}>
-        Welcome to Vordl
+        Welcome to Vordl, guess the word
       </Text>
-      <Text style={styles.welcome}>
-        guess the word
+      <Text style={styles.guessCount}>
+        Guesses: {game.guesses.length}/{MAX_GUESSES}
       </Text>
       <View style={styles.row}>
         {Array.from({ length: WORD_LENGTH }, (_, index) => (
@@ -63,22 +95,34 @@ export default function Index() {
           </View>
         ))}
       </View>
-      <GuessHistory guesses={guesses} />
+      {game.status === "lost" ? (
+        <View style={styles.result}>
+          <Text accessibilityLiveRegion="polite" style={styles.resultText}>
+            Out of guesses! The correct word was:
+          </Text>
+          <Text style={styles.answer}>{game.targetWord}</Text>
+        </View>
+      ) : (
+        <GuessHistory guesses={game.guesses} />
+      )}
       <View style={styles.bottomControls}>
         <Text accessibilityLiveRegion="polite" style={styles.feedback}>
-          {feedback}
+          {game.feedback}
         </Text>
         <Pressable
           accessibilityRole="button"
+          accessibilityState={{ disabled: isGameOver }}
+          disabled={isGameOver}
           onPress={handleCheckGuess}
           style={({ pressed }) => [
             styles.checkButton,
             pressed && styles.checkButtonPressed,
+            isGameOver && styles.checkButtonDisabled,
           ]}
         >
           <Text style={styles.checkButtonText}>Check word</Text>
         </Pressable>
-        <Keyboard onKeyPress={handleKeyPress} />
+        <Keyboard onKeyPress={handleKeyPress} disabled={isGameOver} />
       </View>
     </SafeAreaView>
   );
@@ -101,6 +145,12 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     marginTop: 10,
   },
+  guessCount: {
+    color: "#ffffff",
+    fontFamily: "ShantellSans",
+    fontSize: 16,
+    marginTop: 12,
+  },
   row: {
     flexDirection: "row",
     width: "100%",
@@ -121,6 +171,27 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 32,
     fontWeight: "700",
+  },
+  result: {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
+    maxWidth: 480,
+    alignItems: "center",
+    marginTop: 16,
+    gap: 8,
+  },
+  resultText: {
+    color: "#ffffff",
+    fontFamily: "ShantellSans",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  answer: {
+    color: "#ffffff",
+    fontFamily: "ShantellSans",
+    fontSize: 28,
+    letterSpacing: 2,
   },
   bottomControls: {
     width: "100%",
@@ -145,6 +216,9 @@ const styles = StyleSheet.create({
   },
   checkButtonPressed: {
     backgroundColor: "#bdbdbd",
+  },
+  checkButtonDisabled: {
+    opacity: 0.5,
   },
   checkButtonText: {
     color: "#242424",
