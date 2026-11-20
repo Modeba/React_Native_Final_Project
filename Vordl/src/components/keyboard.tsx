@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   keyboard: {
     width: "100%",
     maxWidth: 480,
-    marginTop: "auto",
     paddingTop: 24,
     gap: 8,
   },
